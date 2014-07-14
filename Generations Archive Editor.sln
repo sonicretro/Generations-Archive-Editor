@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C# Express 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Generations Archive Editor", "Generations Archive Editor\Generations Archive Editor.csproj", "{AF80624C-DA5B-488F-93FD-F6BCA67C6CFD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ar00Lib", "Ar00Lib\Ar00Lib.csproj", "{A5551949-2C32-4440-9D35-C9F926D6B250}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ar00Pack", "Ar00Pack\Ar00Pack.csproj", "{100734ED-298E-4CDF-A115-36B8BB6622B4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AF80624C-DA5B-488F-93FD-F6BCA67C6CFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF80624C-DA5B-488F-93FD-F6BCA67C6CFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF80624C-DA5B-488F-93FD-F6BCA67C6CFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF80624C-DA5B-488F-93FD-F6BCA67C6CFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5551949-2C32-4440-9D35-C9F926D6B250}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5551949-2C32-4440-9D35-C9F926D6B250}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5551949-2C32-4440-9D35-C9F926D6B250}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5551949-2C32-4440-9D35-C9F926D6B250}.Release|Any CPU.Build.0 = Release|Any CPU
+		{100734ED-298E-4CDF-A115-36B8BB6622B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{100734ED-298E-4CDF-A115-36B8BB6622B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{100734ED-298E-4CDF-A115-36B8BB6622B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{100734ED-298E-4CDF-A115-36B8BB6622B4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
