@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
-using System.Runtime.InteropServices;
+using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using Ar00Lib;
 
 namespace Generations_Archive_Editor
@@ -74,7 +75,7 @@ namespace Generations_Archive_Editor
                     if (args[1].Equals("/pad", StringComparison.OrdinalIgnoreCase))
                     {
                         f += 2;
-                        pad = int.Parse(args[2], System.Globalization.NumberStyles.HexNumber);
+                        pad = int.Parse(args[2], NumberStyles.HexNumber);
                     }
                     try
                     {
