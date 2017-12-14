@@ -142,9 +142,9 @@ namespace Ar00Lib
             return Encoding.ASCII.GetString(file, address, textsize);
         }
 
-        public static void GenerateArlFile(string ar00file) { GenerateArlFile(ar00file, false); }
+        //public static void GenerateArlFile(string ar00file) { GenerateArlFile(ar00file, false); }
 
-        public static void GenerateArlFile(string ar00file, bool split)
+        public static void GenerateArlFile(string ar00file, bool split = false)
         {
             string fp = ar00file;
             int s = -1;

@@ -1,14 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 using Ar00Lib;
+using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace Generations_Archive_Editor
 {
     public partial class MainForm : Form
     {
+        CommonFileDialogFilter arFiles = new CommonFileDialogFilter("ar Files", "*.ar.*;*.pfd");
+        CommonFileDialogFilter allFiles = new CommonFileDialogFilter("All Files", "*.*");
+
         public MainForm()
         {
             InitializeComponent();
@@ -26,7 +34,7 @@ namespace Generations_Archive_Editor
                 LoadFile(args[1]);
         }
 
-        private void LoadFile(string filename)
+        private void LoadFile(string filename, bool clear = true)
         {
             try
             {
@@ -38,8 +46,11 @@ namespace Generations_Archive_Editor
                 return;
             }
             this.filename = filename;
-            listView1.Items.Clear();
-            imageList1.Images.Clear();
+            if(clear){
+                listView1.Items.Clear();
+                imageList1.Images.Clear();
+            }
+            if(file.Files.Count == 0) return;
             listView1.BeginUpdate();
             foreach (Ar00File.File item in file.Files)
             {
@@ -51,12 +62,12 @@ namespace Generations_Archive_Editor
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog a = new OpenFileDialog()
+            CommonOpenFileDialog a = new CommonOpenFileDialog
             {
-                DefaultExt = "ar.00",
-                Filter = "ar Files|*.ar.??;*.pfd|All Files|*.*"
+                Filters = {arFiles, allFiles},
+                EnsureFileExists = true
             };
-            if (a.ShowDialog() == DialogResult.OK)
+            if (a.ShowDialog() == CommonFileDialogResult.Ok)
                 LoadFile(a.FileName);
         }
 
@@ -74,36 +85,47 @@ namespace Generations_Archive_Editor
                 }
                 file.Save(filename);
                 if (MessageBox.Show(this, "Generate ARL file?", "Generations Archive Editor", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                    Ar00File.GenerateArlFile(filename);
+                    new Thread(() => {
+                        Ar00File.GenerateArlFile(filename);
+                    }).Start();
             }
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using (SaveFileDialog a = new SaveFileDialog() { Filter = "ar Files|*.ar.??;*.pfd|All Files|*.*" })
-            {
-                if (a.ShowDialog() == DialogResult.OK)
+                using (CommonSaveFileDialog a = new CommonSaveFileDialog { Filters = {arFiles, allFiles }})
                 {
-                    using (PaddingDialog dlg = new PaddingDialog(file.Padding))
+                    if (a.ShowDialog() == CommonFileDialogResult.Ok)
                     {
-                        if (dlg.ShowDialog(this) != DialogResult.OK)
-                            return;
-                        file.Padding = (int)dlg.numericUpDown1.Value;
+                        using (PaddingDialog dlg = new PaddingDialog(file.Padding))
+                        {
+                            if (dlg.ShowDialog(this) != DialogResult.OK)
+                                return;
+                            file.Padding = (int)dlg.numericUpDown1.Value;
+                        }
+                        file.Save(a.FileName);
+                        filename = a.FileName;
+                        if(MessageBox.Show(this,
+                                           "Generate ARL file?",
+                                           "Generations Archive Editor",
+                                           MessageBoxButtons.YesNo) ==
+                           DialogResult.Yes){
+                            string filename = a.FileName;
+                            new Thread(()=>{
+                                Ar00File.GenerateArlFile(filename);
+                            }).Start();
+                        }
                     }
-                    file.Save(a.FileName);
-                    this.filename = a.FileName;
-                    if (MessageBox.Show(this, "Generate ARL file?", "Generations Archive Editor", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                        Ar00File.GenerateArlFile(a.FileName);
                 }
-            }
         }
 
-        private void extractAllToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            FolderBrowserDialog a = new FolderBrowserDialog() { ShowNewFolderButton = true };
-            if (a.ShowDialog(this) == DialogResult.OK)
-                foreach (Ar00File.File item in file.Files)
-                    System.IO.File.WriteAllBytes(Path.Combine(a.SelectedPath, item.Name), item.Data);
+        private void extractAllToolStripMenuItem_Click(object sender, EventArgs e){
+            CommonOpenFileDialog a = new CommonOpenFileDialog{IsFolderPicker = true, EnsurePathExists = true};
+            if (a.ShowDialog() == CommonFileDialogResult.Ok)
+                new Thread(() => {
+                    foreach (Ar00File.File item in file.Files)
+                        File.WriteAllBytes(Path.Combine(a.FileName, item.Name), item.Data);
+                }).Start();
         }
 
         ListViewItem selectedItem;
@@ -119,12 +141,11 @@ namespace Generations_Archive_Editor
 
         private void addFilesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog a = new OpenFileDialog()
+            CommonOpenFileDialog a = new CommonOpenFileDialog
             {
-                Filter = "All Files|*.*",
                 Multiselect = true
             };
-            if (a.ShowDialog() == DialogResult.OK)
+            if (a.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 int i = file.Files.Count;
                 foreach (string item in a.FileNames)
@@ -140,13 +161,15 @@ namespace Generations_Archive_Editor
         private void extractToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (selectedItem == null) return;
-            SaveFileDialog a = new SaveFileDialog()
+            CommonSaveFileDialog a = new CommonSaveFileDialog
             {
-                Filter = "All Files|*.*",
-                FileName = selectedItem.Text
+                Filters = {allFiles},
+                DefaultFileName = selectedItem.Text
             };
-            if (a.ShowDialog() == DialogResult.OK)
-                File.WriteAllBytes(a.FileName, file.Files[listView1.Items.IndexOf(selectedItem)].Data);
+            if (a.ShowDialog() == CommonFileDialogResult.Ok)
+                new Thread(()=>{
+                    File.WriteAllBytes(a.FileName, file.Files[listView1.Items.IndexOf(selectedItem)].Data);
+                }).Start();
         }
 
         private void replaceToolStripMenuItem_Click(object sender, EventArgs e)
@@ -154,12 +177,11 @@ namespace Generations_Archive_Editor
             if (selectedItem == null) return;
             int i = listView1.Items.IndexOf(selectedItem);
             string fn = file.Files[i].Name;
-            OpenFileDialog a = new OpenFileDialog()
-            {
-                Filter = "All Files|*.*",
-                FileName = fn
+            CommonOpenFileDialog a = new CommonOpenFileDialog{
+                Filters = {allFiles},
+                DefaultFileName = fn
             };
-            if (a.ShowDialog() == DialogResult.OK)
+            if (a.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 file.Files[i] = new Ar00File.File(a.FileName);
                 file.Files[i].Name = fn;
@@ -169,12 +191,11 @@ namespace Generations_Archive_Editor
         private void insertToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (selectedItem == null) return;
-            OpenFileDialog a = new OpenFileDialog()
-            {
-                Filter = "All Files|*.*",
+            CommonOpenFileDialog a = new CommonOpenFileDialog{
+                Filters = {allFiles},
                 Multiselect = true
             };
-            if (a.ShowDialog() == DialogResult.OK)
+            if (a.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 int i = listView1.Items.IndexOf(selectedItem);
                 foreach (string item in a.FileNames)
@@ -235,7 +256,7 @@ namespace Generations_Archive_Editor
         {
             string fp = Path.Combine(Path.GetTempPath(), file.Files[listView1.SelectedIndices[0]].Name);
             File.WriteAllBytes(fp, file.Files[listView1.SelectedIndices[0]].Data);
-            System.Diagnostics.Process.Start(fp);
+            Process.Start(fp);
         }
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
@@ -278,12 +299,12 @@ namespace Generations_Archive_Editor
         {
             string fn = Path.Combine(Path.GetTempPath(), file.Files[listView1.SelectedIndices[0]].Name);
             File.WriteAllBytes(fn, file.Files[listView1.SelectedIndices[0]].Data);
-            DoDragDrop(new DataObject(DataFormats.FileDrop, new string[] { fn }), DragDropEffects.All);
+            DoDragDrop(new DataObject(DataFormats.FileDrop, new[] { fn }), DragDropEffects.All);
         }
 
-        private Dictionary<string, Icon> iconstore = new Dictionary<string, Icon>();
+        private readonly Dictionary<string, Icon> iconstore = new Dictionary<string, Icon>();
 
-        [System.Runtime.InteropServices.DllImport("shell32.dll")]
+        [DllImport("shell32.dll")]
         private static extern IntPtr ExtractIconA(int hInst, string lpszExeFileName, int nIconIndex);
 
         private Icon GetIcon(string file)
@@ -292,10 +313,10 @@ namespace Generations_Archive_Editor
             string ext = file.IndexOf('.') > -1 ? file.Substring(file.LastIndexOf('.')) : file;
             if (iconstore.ContainsKey(ext.ToLowerInvariant()))
                 return iconstore[ext.ToLowerInvariant()];
-            Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(ext);
+            RegistryKey k = Registry.ClassesRoot.OpenSubKey(ext);
             if (k == null)
-                k = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey("*");
-            k = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey((string)k.GetValue("", "*"));
+                k = Registry.ClassesRoot.OpenSubKey("*");
+            k = Registry.ClassesRoot.OpenSubKey((string)k.GetValue("", "*"));
             if (k != null)
             {
                 k = k.OpenSubKey("DefaultIcon");

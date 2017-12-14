@@ -1,11 +1,14 @@
-﻿namespace Generations_Archive_Editor
+﻿using System.ComponentModel;
+using System.Windows.Forms;
+
+namespace Generations_Archive_Editor
 {
     partial class PaddingDialog
     {
         /// <summary>
         /// Required designer variable.
         /// </summary>
-        private System.ComponentModel.IContainer components = null;
+        private IContainer components = null;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -111,10 +114,10 @@
 
         #endregion
 
-        internal System.Windows.Forms.NumericUpDown numericUpDown1;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button2;
+        internal NumericUpDown numericUpDown1;
+        private Label label1;
+        private Button button1;
+        private Button button2;
 
     }
 }
